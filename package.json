@@ -15,5 +15,20 @@
   "bugs": {
     "url": "https://github.com/Expand-sys/SFTP-filemanager-DaemonManager/issues"
   },
-  "homepage": "https://github.com/Expand-sys/SFTP-filemanager-DaemonManager#readme"
+  "homepage": "https://github.com/Expand-sys/SFTP-filemanager-DaemonManager#readme",
+  "dependencies": {
+    "@mgcrea/fastify-session": "^0.14.2",
+    "dotenv": "^10.0.0",
+    "fastify": "^3.25.3",
+    "fastify-cookie": "^5.5.0",
+    "fastify-flash": "^2.0.2",
+    "fastify-formbody": "^5.2.0",
+    "fastify-secure-session": "^3.0.0",
+    "fastify-static": "^4.5.0",
+    "path": "^0.12.7",
+    "pino-pretty": "^7.3.0",
+    "point-of-view": "^5.0.0",
+    "pug": "^3.0.2",
+    "ssh2": "^1.5.0"
+  }
 }
