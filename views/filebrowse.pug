@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  .container
+    .card
+      ul
+        if filelist
+          each file in filelist
+            li
+              a(href=`?dir=${curdir}${file.filename}`) #{file.longname}
+    

@@ -1,4 +1,3 @@
-const Client = require("ssh2").Client;
 const root = process.env.PWD;
 require("pino-pretty");
 const dotenv = require("dotenv");
@@ -9,6 +8,7 @@ const fastify = require("fastify")({
 });
 
 const fastifyFlash = require("fastify-flash");
+const Client = require("ssh2").Client;
 
 const path = require("path");
 const fs = require("fs");
@@ -37,31 +37,60 @@ fastify.register(require("point-of-view"), {
   engine: {
     pug: require("pug")
   },
-  defaultContext: {
-    random: papy()
-  },
   root: path.join(__dirname, "views")
 });
-fastify.get("/", async function(req, res) {});
-fastify.post("/setup", async function(req, res) {
-  const { url, secure } = req.body;
-  if (secure) {
-    process.env.SECURE = true;
-  }
-  process.env.BANKAPIURL = url;
-  console.log(process.env.BANKAPIURL);
-  fs.rmSync(`${root}/.env`);
-  fs.writeFileSync(
-    `${root}/.env`,
-    "BANKAPIURL=" +
-      process.env.BANKAPIURL +
-      "\n" +
-      "SECURE=" +
-      process.env.SECURE +
-      "\nSETUP=true"
-  );
+fastify.get("/", async function(req, res) {
+  if (!req.session.get("username")) {
+    res.view("start");
+  } else {
+    const host = req.session.get("host");
+    const port = req.session.get("port");
+    const username = req.session.get("username");
+    const password = req.session.get("password");
+    const curdir = req.query.dir + "/";
+    let filelist;
 
-  fs.writeFileSync(`${root}/tmp/restart.txt`, "");
+    const conn = new Client();
+    await conn
+      .on("ready", () => {
+        console.log("Client :: ready");
+        conn.sftp((err, sftp) => {
+          if (err) throw err;
+          sftp.readdir(`${curdir}`, (err, list) => {
+            if (err) req.session.set("error", err);
+            filelist = list;
+            conn.end();
+          });
+        });
+      })
+      .connect({
+        host: host,
+        port: port,
+        username: username,
+        password: password
+      });
+    conn.on("end", () => {
+      if (req.session.get("error")) {
+      }
+      res.view("filebrowse", {
+        filelist: filelist,
+        curdir: curdir
+      });
+    });
+  }
+});
+fastify.post("/init", async function(req, res) {
+  const { host, port, username, password } = req.body;
+  req.session.set("host", host);
+  req.session.set("port", port);
+  req.session.set("username", username);
+  req.session.set("password", password);
+  req.session.set("curdir", "/");
+
+  res.redirect("/?dir=/");
+});
+fastify.get("/logout", async function(req, res) {
+  req.session.delete();
   res.redirect("/");
 });
 
